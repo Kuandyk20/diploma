@@ -61,7 +61,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           );
         } else {
           setState(() {
-            _errorMessage = responseData['message'] ?? 'Registration failed';
+
+
+            _errorMessage = responseData['message'] ?? 'Registration failed ${response.statusCode}';
           });
           print(_errorMessage);
         }
@@ -93,7 +95,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'First Name *'),
+                  decoration: const InputDecoration(labelText: 'First Name*'),
                   validator: (value) {
                     final RegExp lettersOnlyRegex = RegExp(r'^[a-zA-Z]+$');
                     if (value!.isEmpty) {
@@ -108,7 +110,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   },
                 ),
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Last Name *'),
+                  decoration: const InputDecoration(labelText: 'Last Name*'),
                   validator: (value) {
                     final RegExp lettersOnlyRegex = RegExp(r'^[a-zA-Z]+$');
                     if (value!.isEmpty) {
@@ -123,7 +125,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   },
                 ),
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Patronymic'),
+                  decoration: const InputDecoration(labelText: 'Patronymic*'),
                   validator: (value){
                     final RegExp lettersOnlyRegex = RegExp(r'^[a-zA-Z]+$');
                     if (!lettersOnlyRegex.hasMatch(value!)) {
@@ -136,7 +138,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   },
                 ),
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Phone Number *'),
+                  decoration: const InputDecoration(labelText: 'Phone Number*'),
                   keyboardType: TextInputType.phone,
                   validator: (value) {
                     final RegExp regex = RegExp(r'^\+?\d{9,15}$');
@@ -152,13 +154,24 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   },
                 ),
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Email'),
+                  decoration: const InputDecoration(labelText: 'Email*'),
+                  validator: (value) {
+                    final RegExp regex1 = RegExp(
+                      r'^[\w-]+(\.[\w-]+)*@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,7}$',
+                    );
+                    if (value!.isEmpty) {
+                      return 'Please enter an email';
+                    } else if (!regex1.hasMatch(value)) {
+                      return 'Invalid email format';
+                    }
+                    return null;
+                  },
                   onSaved: (value) {
                     _email = value!;
                   },
                 ),
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Password *'),
+                  decoration: const InputDecoration(labelText: 'Password*'),
                   obscureText: true,
                   validator: (value) {
                     if (value!.isEmpty) {

@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'bookSeats.dart';
+
 class RestaurantListPage extends StatefulWidget {
   @override
   _RestaurantListPageState createState() => _RestaurantListPageState();
@@ -226,7 +228,16 @@ class _RestaurantMenuPageState extends State<RestaurantMenuPage> {
             final menuItem = menuItems[index];
             return GestureDetector(
               onTap: () {
-                // Handle menu item tap
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BookSeatsPage(
+                      restaurant: widget.restaurant,
+                      menuItem: menuItem,
+                      selectedItemId: menuItem.id,
+                    ),
+                  ),
+                );
               },
               child: Card(
                 elevation: 2,
