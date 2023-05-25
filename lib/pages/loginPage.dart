@@ -41,70 +41,68 @@ class _LoginPageState extends State<LoginPage> {
             color: Colors.white,
             child: Padding(
               padding: const EdgeInsets.all(20.0),
-              child: SingleChildScrollView( // Wrap the Column with SingleChildScrollView
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    const Text(
-                      'Authorization',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 30.0,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  const Text(
+                    'Authorization',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 30.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 20.0),
+                  TextFormField(
+                    decoration: const InputDecoration(
+                      labelText: 'Number',
+                      labelStyle: TextStyle(color: Colors.black),
+                    ),
+                    keyboardType: TextInputType.phone,
+                    onChanged: (value) {
+                      setState(() {
+                        phone = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 10.0),
+                  TextFormField(
+                    decoration: const InputDecoration(
+                      labelText: 'Password',
+                      labelStyle: TextStyle(color: Colors.black),
+                    ),
+                    obscureText: true,
+                    onChanged: (value) {
+                      setState(() {
+                        password = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 20.0),
+                  ElevatedButton(
+                    onPressed: _authorizeUser,
+                    child: const Text('Log in'),
+                    style: ElevatedButton.styleFrom(
+                      primary: Colors.blue,
+                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      textStyle: const TextStyle(fontSize: 18.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
                       ),
+                      minimumSize: const Size(double.infinity, 0), // Set the width to double.infinity
                     ),
-                    const SizedBox(height: 20.0),
-                    TextFormField(
-                      decoration: const InputDecoration(
-                        labelText: 'Number',
-                        labelStyle: TextStyle(color: Colors.black),
-                      ),
-                      keyboardType: TextInputType.phone,
-                      onChanged: (value) {
-                        setState(() {
-                          phone = value;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 10.0),
-                    TextFormField(
-                      decoration: const InputDecoration(
-                        labelText: 'Password',
-                        labelStyle: TextStyle(color: Colors.black),
-                      ),
-                      obscureText: true,
-                      onChanged: (value) {
-                        setState(() {
-                          password = value;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 20.0),
-                    ElevatedButton(
-                      onPressed: _authorizeUser,
-                      child: const Text('Log in'),
-                      style: ElevatedButton.styleFrom(
-                        primary: Colors.blue,
-                        padding: const EdgeInsets.symmetric(vertical: 16.0),
-                        textStyle: const TextStyle(fontSize: 18.0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        minimumSize: const Size(double.infinity, 0),
-                      ),
-                    ),
-                    TextButton(
-                      child: const Text('Create an account'),
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => RegistrationScreen()),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+                  ),
+                  TextButton(
+                    child: const Text('Create an account'),
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => RegistrationScreen()),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ),

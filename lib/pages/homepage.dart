@@ -1,5 +1,7 @@
 import 'package:diploma/pages/profile_page.dart';
+import 'package:diploma/pages/resInfo.dart';
 import 'package:flutter/material.dart';
+import 'bookSeats.dart';
 import 'restaurantPage.dart';
 import 'package:diploma/pages/cartPage.dart';
 
@@ -12,7 +14,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
 
   int _currentIndex = 0;
-  final List<Widget> _children = [RestaurantListPage(), UserProfilePage(), CartPage(), CartPage()];
+  final List<Widget> _children = [RestaurantListPage(), UserProfilePage(), BookingSeatsPage(), CartPage()];
 
   @override
   Widget build(BuildContext context) {
