@@ -1,3 +1,4 @@
+
 import 'package:diploma/pages/resInfo.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -8,6 +9,7 @@ class RestaurantListPage extends StatefulWidget {
   @override
   _RestaurantListPageState createState() => _RestaurantListPageState();
 }
+
 
 class _RestaurantListPageState extends State<RestaurantListPage> {
   List<Restaurant> restaurants = [];
@@ -20,6 +22,8 @@ class _RestaurantListPageState extends State<RestaurantListPage> {
     fetchRestaurants();
   }
 
+
+
   Future<void> fetchRestaurants() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
@@ -27,6 +31,7 @@ class _RestaurantListPageState extends State<RestaurantListPage> {
     final response = await http.get(
       url,
       headers: {
+        'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       },
     );
@@ -45,6 +50,10 @@ class _RestaurantListPageState extends State<RestaurantListPage> {
     }
   }
 
+
+
+
+
   void filterRestaurants(String searchTerm) {
     setState(() {
       filteredRestaurants = restaurants
@@ -58,7 +67,7 @@ class _RestaurantListPageState extends State<RestaurantListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Available Restaurants'),
+        title: const Text('Available Restaurants'),
         actions: [
           IconButton(
             icon: Icon(Icons.search),
@@ -72,7 +81,7 @@ class _RestaurantListPageState extends State<RestaurantListPage> {
         ],
       ),
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF398AE5), Color(0xFF67B5F9)],
             begin: Alignment.topCenter,
@@ -85,16 +94,16 @@ class _RestaurantListPageState extends State<RestaurantListPage> {
             final restaurant = filteredRestaurants[index];
             return Card(
               elevation: 2,
-              margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8.0),
               ),
               child: ListTile(
-                contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                leading: Icon(Icons.restaurant),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                leading: const Icon(Icons.restaurant),
                 title: Text(
                   restaurant.name,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16.0,
                   ),
@@ -115,6 +124,8 @@ class _RestaurantListPageState extends State<RestaurantListPage> {
       ),
     );
   }
+
+
 }
 
 class Restaurant {
@@ -134,6 +145,24 @@ class Restaurant {
       name: json['name'] as String,
       description: json['description'] as String,
     );
+  }
+}
+
+class Cart {
+  static List<MenuItem> cartItems = [];
+
+  static List<MenuItem> get items => cartItems;
+
+  static void addItem(MenuItem product) {
+    cartItems.add(product);
+  }
+
+  static void removeItem(MenuItem product) {
+    cartItems.remove(product);
+  }
+
+  static void clearCart() {
+    cartItems.clear();
   }
 }
 
@@ -166,7 +195,7 @@ class MenuItem {
 class RestaurantMenuPage extends StatefulWidget {
   final Restaurant restaurant;
 
-  const RestaurantMenuPage({required this.restaurant});
+  const RestaurantMenuPage({super.key, required this.restaurant});
 
   @override
   _RestaurantMenuPageState createState() => _RestaurantMenuPageState();
@@ -174,6 +203,7 @@ class RestaurantMenuPage extends StatefulWidget {
 
 class _RestaurantMenuPageState extends State<RestaurantMenuPage> {
   List<MenuItem> menuItems = [];
+
 
   @override
   void initState() {
@@ -214,8 +244,8 @@ class _RestaurantMenuPageState extends State<RestaurantMenuPage> {
           ),
         ),
         child: GridView.builder(
-          padding: EdgeInsets.all(16.0),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          padding: const EdgeInsets.all(16.0),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             crossAxisSpacing: 16.0,
             mainAxisSpacing: 16.0,
@@ -238,7 +268,7 @@ class _RestaurantMenuPageState extends State<RestaurantMenuPage> {
                   children: [
                     Expanded(
                       child: ClipRRect(
-                        borderRadius: BorderRadius.only(
+                        borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(8.0),
                           topRight: Radius.circular(8.0),
                         ),
@@ -249,10 +279,10 @@ class _RestaurantMenuPageState extends State<RestaurantMenuPage> {
                       ),
                     ),
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                       child: Text(
                         menuItem.name,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 16.0,
                           fontWeight: FontWeight.bold,
                         ),
@@ -261,10 +291,10 @@ class _RestaurantMenuPageState extends State<RestaurantMenuPage> {
                       ),
                     ),
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
                       child: Text(
                         'Price: \$${menuItem.price.toStringAsFixed(2)}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 14.0,
                           color: Colors.grey,
                         ),
@@ -286,11 +316,20 @@ class RestaurantSearchDelegate extends SearchDelegate<Restaurant?> {
 
   RestaurantSearchDelegate(this.restaurants);
 
+  void addToCart(BuildContext context, MenuItem product) {
+    Cart.addItem(product);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Added to cart'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
   @override
   List<Widget> buildActions(BuildContext context) {
     return [
       IconButton(
-        icon: Icon(Icons.clear),
+        icon: const Icon(Icons.clear),
         onPressed: () {
           query = '';
         },
@@ -301,7 +340,7 @@ class RestaurantSearchDelegate extends SearchDelegate<Restaurant?> {
   @override
   Widget buildLeading(BuildContext context) {
     return IconButton(
-      icon: Icon(Icons.arrow_back),
+      icon: const Icon(Icons.arrow_back),
       onPressed: () {
         close(context, null);
       },
@@ -320,55 +359,66 @@ class RestaurantSearchDelegate extends SearchDelegate<Restaurant?> {
       itemBuilder: (BuildContext context, int index) {
         final restaurant = searchResults[index];
         return Container(
-            margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8.0),
-        ),
-        child: Padding(
-        padding: EdgeInsets.all(8.0),
-        child: Container(
-        decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8.0),
-        gradient: LinearGradient(
-        colors: [Color(0xFF3366FF), Color(0xFF00CCFF)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        ),
-        ),
-        child: ListTile(
-        contentPadding:
-        EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        leading: Icon(Icons.restaurant, color: Colors.white),
-        title: Text(
-        restaurant.name,
-        style: TextStyle(
-        fontWeight: FontWeight.bold,
-        fontSize: 16.0,
-        color: Colors.white,
-        ),
-        ),
-        subtitle: Text(
-        restaurant.description,
-        style: TextStyle(
-        color: Colors.white,
-        ),
-        ),
-        onTap: () {
-        close(context, restaurant);
-        Navigator.push(
-        context,
-        MaterialPageRoute(
-        builder: (context) =>
-        RestaurantMenuPage(restaurant: restaurant),
-        ),
-        );
-        },
-        ),
-        ),
-        ),
-        )
+            margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8.0),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF3366FF), Color(0xFF00CCFF)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    leading: Icon(Icons.restaurant, color: Colors.white),
+                    title: Text(
+                      restaurant.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16.0,
+                        color: Colors.white,
+                      ),
+                    ),
+                    subtitle: Text(
+                      restaurant.description,
+                      style: const TextStyle(
+                        color: Colors.white,
+                      ),
+                    ),
+                    trailing: IconButton(
+                      icon: Icon(Icons.add),
+                      onPressed: () {
+                        final menuItem = MenuItem(
+                          id: 0, // Assign the appropriate ID for the menu item
+                          name: restaurant.name, // Use the restaurant name as the menu item name for demonstration
+                          description: restaurant.description, // Use the restaurant description as the menu item description for demonstration
+                          price: 0.0, // Assign the appropriate price for the menu item
+                          images: [], // Assign the appropriate images for the menu item
+                        );
+                        addToCart(context, menuItem);
+                      },
+                    ),
+                    onTap: () {
+                      close(context, restaurant);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RestaurantMenuPage(restaurant: restaurant),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            )
         );
       },
     );

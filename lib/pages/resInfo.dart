@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:diploma/pages/restaurantPage.dart';
 
 class RestaurantInfoPage extends StatelessWidget {
@@ -19,14 +17,14 @@ class RestaurantInfoPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Description',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),
             Text(restaurant.description),
             SizedBox(height: 16),
-            Text(
+            const Text(
               'Location',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
@@ -43,7 +41,7 @@ class RestaurantInfoPage extends StatelessWidget {
                     ),
                   );
                 },
-                child: Text('View Menu'),
+                child: const Text('View Menu'),
               ),
             ),
           ],

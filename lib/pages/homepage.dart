@@ -1,7 +1,6 @@
 import 'package:diploma/pages/profile_page.dart';
-import 'package:diploma/pages/resInfo.dart';
+import 'package:diploma/pages/support.dart';
 import 'package:flutter/material.dart';
-import 'bookSeats.dart';
 import 'restaurantPage.dart';
 import 'package:diploma/pages/cartPage.dart';
 
@@ -14,7 +13,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
 
   int _currentIndex = 0;
-  final List<Widget> _children = [RestaurantListPage(), UserProfilePage(), BookingSeatsPage(), CartPage()];
+  final List<Widget> _children = [RestaurantListPage(), UserProfilePage(), SupportPage(), CartPage()];
 
   @override
   Widget build(BuildContext context) {
@@ -46,8 +45,8 @@ class _HomePageState extends State<HomePage> {
                 label: 'Profile',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.search),
-                label: 'Search',
+                icon: Icon(Icons.support),
+                label: 'Support',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.shopping_cart),

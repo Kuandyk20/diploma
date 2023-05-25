@@ -66,7 +66,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           print(_errorMessage);
         }
       } catch (e) {
-        // Request failed, display error message
         setState(() {
           _errorMessage = 'Registration failed: ${e.toString()}';
           print(_errorMessage);

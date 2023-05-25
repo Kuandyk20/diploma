@@ -140,7 +140,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         builder: (context) => LoginPage()),
                   );
                 } else {
-                  // handle the error response
                   throw Exception('Failed to log out');
                 }
               },

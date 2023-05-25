@@ -41,6 +41,7 @@ class _LoginPageState extends State<LoginPage> {
             color: Colors.white,
             child: Padding(
               padding: const EdgeInsets.all(20.0),
+              child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
@@ -84,7 +85,7 @@ class _LoginPageState extends State<LoginPage> {
                     onPressed: _authorizeUser,
                     child: const Text('Log in'),
                     style: ElevatedButton.styleFrom(
-                      primary: Colors.blue,
+                      backgroundColor: Colors.blue,
                       padding: const EdgeInsets.symmetric(vertical: 16.0),
                       textStyle: const TextStyle(fontSize: 18.0),
                       shape: RoundedRectangleBorder(
@@ -104,6 +105,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ],
               ),
+              )
             ),
           ),
         ),
@@ -124,27 +126,19 @@ class _LoginPageState extends State<LoginPage> {
       },
     );
     if (response.statusCode == 200) {
-      // Authorization was successful
       final responseData = jsonDecode(response.body);
       final token = responseData['data']['access_token'];
-
-      // Print the access_token value
-      // Save the token in the device's local storage
-      // You can use any storage mechanism you prefer, such as Shared Preferences or SQLite
-      // Here's an example using Shared Preferences
       if (token != null) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
       }
-      // Navigate to the next screen
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => HomePage()),
       );
     } else {
-      // Authorization failed
       print('Authorization failed with status: ${response.statusCode}.');
-      final snackBar = SnackBar(
+      const snackBar = SnackBar(
         content: Text('Incorrect authorization. Please try again.'),
         duration: Duration(seconds: 3),
         backgroundColor: Colors.red,
