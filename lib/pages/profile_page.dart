@@ -71,16 +71,27 @@ class _UserProfilePageState extends State<UserProfilePage> {
         child: Text('Failed to load user profile'),
       )
           : Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF3366FF), Color(0xFF00CCFF)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
           children: <Widget>[
+            const SizedBox(height: 16.0),
+            Center(
+              child: CircleAvatar(
+                backgroundColor: Colors.white,
+                radius: 40,
+                child: Text(
+                  _userProfile!['firstName']![0].toUpperCase(),
+                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
             const SizedBox(height: 16.0),
             Container(
               alignment: Alignment.center,
@@ -102,7 +113,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
               leading: Icon(Icons.phone, color: Colors.white),
               title: Text(
                 _userProfile!['phone'],
-                style: TextStyle(fontSize: 16, color: Colors.white),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const SizedBox(height: 16.0),
@@ -110,7 +125,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
               leading: Icon(Icons.email, color: Colors.white),
               title: Text(
                 _userProfile!['email'] ?? 'No email provided',
-                style: TextStyle(fontSize: 16, color: Colors.white),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const SizedBox(height: 16.0),

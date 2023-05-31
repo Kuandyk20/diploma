@@ -1,8 +1,77 @@
 import 'package:diploma/pages/restaurantPage.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+
+import 'bookSeats.dart';
+
+class CartPage extends StatefulWidget {
+  final int restaurantId;
+
+  CartPage({required this.restaurantId});
+
+  @override
+  _CartPageState createState() => _CartPageState();
+}
+
+class _CartPageState extends State<CartPage> {
+  List<MenuItem> cartItems = [];
+
+  @override
+  void initState() {
+    super.initState();
+    loadCartItems();
+  }
+
+  Future<void> loadCartItems() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cartItemsJson = prefs.getString('cartItems_${widget.restaurantId}');
+    if (cartItemsJson != null) {
+      final cartItemsData = jsonDecode(cartItemsJson) as List<dynamic>;
+      final List<MenuItem> items = cartItemsData
+          .map((itemData) => MenuItem.fromJson(itemData))
+          .toList();
+      setState(() {
+        cartItems = items;
+      });
+    }
+  }
+
+  Future<void> removeFromCart(MenuItem item) async {
+    cartItems.remove(item);
+    final prefs = await SharedPreferences.getInstance();
+    final cartItemsJson = cartItems.map((item) => item.toJson()).toList();
+    await prefs.setString(
+        'cartItems_${widget.restaurantId}', jsonEncode(cartItemsJson));
+    setState(() {});
+  }
+
+  Future<void> clearCart() async {
+    cartItems.clear();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('cartItems_${widget.restaurantId}');
+    setState(() {});
+  }
+
+  Future<void> refreshCart() async {
+    setState(() {
+      cartItems = [];
+    });
+    await loadCartItems();
+  }
 
 
-class CartPage extends StatelessWidget {
+  void navigateToBookTablePage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BookTablePage(
+          cartItems: cartItems,
+          restaurantId: widget.restaurantId,
+        ),
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -10,39 +79,48 @@ class CartPage extends StatelessWidget {
         title: Text('Cart'),
       ),
       body: ListView.builder(
-        itemCount: Cart.items.length,
+        itemCount: cartItems.length,
         itemBuilder: (BuildContext context, int index) {
-          final item = Cart.items[index];
+          final item = cartItems[index];
           return ListTile(
-            /*leading: Image.network(
-              item.image,
-              width: 60,
-              height: 60,
-              fit: BoxFit.cover,
-            ),*/
             title: Text(item.name),
-            //subtitle: Text(item.address),
             trailing: IconButton(
-              icon: Icon(Icons.remove_circle),
+              icon: const Icon(Icons.remove_circle),
               onPressed: () {
-                Cart.removeItem(item);
+                removeFromCart(item);
               },
             ),
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Cart.clearCart();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Cart cleared'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        },
-        icon: Icon(Icons.clear_all),
-        label: Text('Clear Cart'),
+
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+
+          const SizedBox(height: 8),
+    FloatingActionButton.extended(
+    onPressed: () {
+    navigateToBookTablePage();
+    },
+    icon: const Icon(Icons.shopping_cart),
+    label: const Text('Buy'),
+    ),
+          const SizedBox(height: 8),
+          FloatingActionButton.extended(
+            onPressed: () {
+              clearCart();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Cart cleared'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+            icon: const Icon(Icons.clear_all),
+            label: const Text('Clear Cart'),
+          ),
+        ],
       ),
     );
   }

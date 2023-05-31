@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SupportPage extends StatefulWidget {
   @override
@@ -11,13 +12,19 @@ class _SupportPageState extends State<SupportPage> {
   TextEditingController _textEditingController = TextEditingController();
 
   Future<void> postSupportText(String text) async {
-    final url = 'http://34.116.195.230:9001/api/support';
-    final body = jsonEncode({'text': text});
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    const url = 'http://34.116.195.230:9001/api/support';
+    final body = jsonEncode(
+        {
+          'text': text
+        });
 
     try {
       final response = await http.post(
         Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token'},
         body: body,
       );
 
@@ -27,8 +34,8 @@ class _SupportPageState extends State<SupportPage> {
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: Text('Support Posted'),
-              content: Text('Your support text has been posted successfully.'),
+              title: Text('Message has been sent'),
+              content: Text('Your message has been sent successfully.'),
               actions: [
                 TextButton(
                   onPressed: () {
@@ -93,7 +100,7 @@ class _SupportPageState extends State<SupportPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Support'),
+        title: const Text('Support'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -110,7 +117,7 @@ class _SupportPageState extends State<SupportPage> {
                       color: Colors.grey.withOpacity(0.2),
                       spreadRadius: 2,
                       blurRadius: 4,
-                      offset: Offset(0, 2),
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
@@ -138,14 +145,14 @@ class _SupportPageState extends State<SupportPage> {
                     context: context,
                     builder: (BuildContext context) {
                       return AlertDialog(
-                        title: Text('Empty Support Text'),
-                        content: Text('Please enter some text for your support.'),
+                        title: const Text('Empty Support Text'),
+                        content: const Text('Please enter some text for your support.'),
                         actions: [
                           TextButton(
                             onPressed: () {
                               Navigator.of(context).pop();
                             },
-                            child: Text('OK'),
+                            child: const Text('OK'),
                           ),
                         ],
                       );

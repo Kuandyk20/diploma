@@ -1,9 +1,11 @@
-
+import 'package:diploma/pages/bookSeats.dart';
 import 'package:diploma/pages/resInfo.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'cartPage.dart';
 
 class RestaurantListPage extends StatefulWidget {
   @override
@@ -49,10 +51,6 @@ class _RestaurantListPageState extends State<RestaurantListPage> {
       throw Exception('Failed to fetch restaurants');
     }
   }
-
-
-
-
 
   void filterRestaurants(String searchTerm) {
     setState(() {
@@ -113,7 +111,7 @@ class _RestaurantListPageState extends State<RestaurantListPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => RestaurantInfoPage(restaurant: restaurant),
+                      builder: (context) => RestaurantMenuPage(restaurant: restaurant),
                     ),
                   );
                 },
@@ -153,8 +151,9 @@ class Cart {
 
   static List<MenuItem> get items => cartItems;
 
-  static void addItem(MenuItem product) {
+  static void addItem(MenuItem product, int restaurantId) {
     cartItems.add(product);
+    product.restaurantId = restaurantId;
   }
 
   static void removeItem(MenuItem product) {
@@ -166,12 +165,15 @@ class Cart {
   }
 }
 
+// Modify the MenuItem class to include a quantity field and update quantity
 class MenuItem {
   final int id;
   final String name;
   final String description;
   final double price;
   final List<String> images;
+  int restaurantId;
+  int quantity; // Add the restaurantId property
 
   MenuItem({
     required this.id,
@@ -179,6 +181,8 @@ class MenuItem {
     required this.description,
     required this.price,
     required this.images,
+    required this.restaurantId,
+    this.quantity = 1,
   });
 
   factory MenuItem.fromJson(Map<String, dynamic> json) {
@@ -186,16 +190,27 @@ class MenuItem {
       id: json['id'] as int,
       name: json['name'] as String,
       description: json['description'] as String,
-      price: (json['price'] as double?) ?? 0.0,
+      price: (json['price'] as num).toDouble(),
       images: (json['images'] as List<dynamic>).cast<String>(),
+      restaurantId: 0,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'price': price,
+      'images': images,
+    };
   }
 }
 
 class RestaurantMenuPage extends StatefulWidget {
   final Restaurant restaurant;
 
-  const RestaurantMenuPage({super.key, required this.restaurant});
+  const RestaurantMenuPage({ required this.restaurant});
 
   @override
   _RestaurantMenuPageState createState() => _RestaurantMenuPageState();
@@ -203,11 +218,13 @@ class RestaurantMenuPage extends StatefulWidget {
 
 class _RestaurantMenuPageState extends State<RestaurantMenuPage> {
   List<MenuItem> menuItems = [];
+  int restaurantId = 0;
 
 
   @override
   void initState() {
     super.initState();
+    restaurantId = widget.restaurant.id;
     fetchMenu();
   }
 
@@ -256,7 +273,7 @@ class _RestaurantMenuPageState extends State<RestaurantMenuPage> {
             final menuItem = menuItems[index];
             return GestureDetector(
               onTap: () {
-                // Handle menu item tap
+                addToCart(context, menuItems[index], widget.restaurant.id);
               },
               child: Card(
                 elevation: 2,
@@ -307,6 +324,70 @@ class _RestaurantMenuPageState extends State<RestaurantMenuPage> {
           },
         ),
       ),
+      floatingActionButton: Stack(
+        children: [
+          Align(
+            alignment: Alignment.bottomLeft,
+            child: Padding(
+              padding: EdgeInsets.only(bottom: 16, left: 32),
+              child: FloatingActionButton.extended(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BookTablePage(restaurantId: widget.restaurant.id, cartItems: Cart.cartItems,), // Pass the restaurant ID to CartPage
+                    ),
+                  );
+                },
+                icon: Icon(Icons.book),
+                label: Text('Book Table'),
+              ),
+            ),
+          ),
+
+          Align(
+            alignment: Alignment.bottomRight,
+            child: Padding(
+              padding: EdgeInsets.only(bottom: 16, left: 32),
+              child: FloatingActionButton.extended(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CartPage(restaurantId: widget.restaurant.id), // Pass the restaurant ID to CartPage
+                    ),
+                  );
+                },
+                icon: Icon(Icons.shopping_cart),
+                label: Text('View Cart'),
+              ),
+            ),
+          ),
+        ],
+      ),
+
+    );
+  }
+
+  void addToCart(BuildContext context, MenuItem product, int restaurantId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final cartItemsJson = prefs.getString('cartItems_$restaurantId');
+    List<MenuItem> cartItems = [];
+
+    if (cartItemsJson != null) {
+      final cartItemsList = jsonDecode(cartItemsJson) as List<dynamic>;
+      cartItems = cartItemsList.map((item) => MenuItem.fromJson(item)).toList();
+    }
+
+    cartItems.add(product); // Add a separate instance of the product
+
+    await prefs.setString('cartItems_$restaurantId', jsonEncode(cartItems));
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Added to cart'),
+        duration: Duration(seconds: 2),
+      ),
     );
   }
 }
@@ -316,15 +397,7 @@ class RestaurantSearchDelegate extends SearchDelegate<Restaurant?> {
 
   RestaurantSearchDelegate(this.restaurants);
 
-  void addToCart(BuildContext context, MenuItem product) {
-    Cart.addItem(product);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Added to cart'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
+
   @override
   List<Widget> buildActions(BuildContext context) {
     return [
@@ -393,19 +466,6 @@ class RestaurantSearchDelegate extends SearchDelegate<Restaurant?> {
                         color: Colors.white,
                       ),
                     ),
-                    trailing: IconButton(
-                      icon: Icon(Icons.add),
-                      onPressed: () {
-                        final menuItem = MenuItem(
-                          id: 0, // Assign the appropriate ID for the menu item
-                          name: restaurant.name, // Use the restaurant name as the menu item name for demonstration
-                          description: restaurant.description, // Use the restaurant description as the menu item description for demonstration
-                          price: 0.0, // Assign the appropriate price for the menu item
-                          images: [], // Assign the appropriate images for the menu item
-                        );
-                        addToCart(context, menuItem);
-                      },
-                    ),
                     onTap: () {
                       close(context, restaurant);
                       Navigator.push(
@@ -472,7 +532,7 @@ class RestaurantSearchDelegate extends SearchDelegate<Restaurant?> {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        RestaurantInfoPage(restaurant: restaurant),
+                        RestaurantMenuPage(restaurant: restaurant),
                   ),
                 );
               },

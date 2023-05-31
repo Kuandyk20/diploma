@@ -1,186 +1,267 @@
+import 'package:diploma/pages/restaurantPage.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class Seat {
-  final int number;
-  final bool isFree;
+class BookTablePage extends StatefulWidget {
+  final int restaurantId;
+  final List<MenuItem> cartItems;
 
-  Seat(this.number, this.isFree);
-}
-
-class BookingSeatsPage extends StatefulWidget {
-  @override
-  _BookingSeatsPageState createState() => _BookingSeatsPageState();
-}
-
-class _BookingSeatsPageState extends State<BookingSeatsPage> {
-  List<Seat> _seats = List.generate(30, (index) => Seat(index + 1, true));
-  List<int> _selectedSeatNumbers = [];
-  late DateTime _selectedDateTime;
+  const BookTablePage({
+    required this.restaurantId,
+    required this.cartItems,
+  });
 
   @override
-  void initState() {
-    super.initState();
-    _selectedDateTime = DateTime.now(); // Initialize with current date and time
+  _BookTablePageState createState() => _BookTablePageState();
+}
+
+class _BookTablePageState extends State<BookTablePage> {
+  final TextEditingController guestsController = TextEditingController();
+  DateTime? selectedStartTime;
+  DateTime? selectedEndTime;
+
+  Future<void> bookTable() async {
+    if (selectedStartTime == null || selectedEndTime == null) {
+      // Start time or end time not selected, show an error message
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Error'),
+            content: Text('Please select a start time and end time.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+      return;
+    }
+
+    final url = Uri.parse('http://34.116.195.230:9001/api/booking');
+
+    final bookingData = {
+      "restaurantId": widget.restaurantId,
+      "timeStart": '${selectedStartTime!.toIso8601String().substring(0,19)}Z',
+      "timeEnd": '${selectedEndTime!.toIso8601String().substring(0,19)}Z',
+      "guests": int.parse(guestsController.text),
+      "preorder": widget.cartItems
+          .map((item) => {"itemId": item.id, "quantity": item.quantity})
+          .toList(),
+    };
+    print(bookingData);
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final response = await http.post(url, body: jsonEncode(bookingData), headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    });
+    print(response);
+
+    if (response.statusCode == 200) {
+      final responseData = jsonDecode(response.body);
+      final data = responseData['data'];
+      final stripeUrl = data['stripeUrl'];
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => WebViewScreen(url: stripeUrl)),
+      );
+      // Use the stripeSessionId as needed
+      print('Stripe Session ID: $stripeUrl');
+    } else {
+      // Booking failed
+      // Do something, such as showing an error message
+      print(response.statusCode);
+    }
+  }
+
+  Future<void> selectStartTime() async {
+    final selectedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+
+    if (selectedDate != null) {
+      final selectedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+      );
+
+      if (selectedTime != null) {
+        setState(() {
+          selectedStartTime = DateTime(
+            selectedDate.year,
+            selectedDate.month,
+            selectedDate.day,
+            selectedTime.hour,
+            selectedTime.minute,
+          );
+        });
+      }
+    }
+  }
+
+  Future<void> selectEndTime() async {
+    final selectedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+
+    if (selectedDate != null) {
+      final selectedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+      );
+
+      if (selectedTime != null) {
+        setState(() {
+          selectedEndTime = DateTime(
+            selectedDate.year,
+            selectedDate.month,
+            selectedDate.day,
+            selectedTime.hour,
+            selectedTime.minute,
+          );
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Select Seats'),
+        title: const Text('Book Table'),
       ),
-      body: Column(
-        children: [
-      Expanded(
-      child: Center(
-      child: GridView.builder(
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-      crossAxisCount: 6,
-        mainAxisSpacing: 10.0,
-        crossAxisSpacing: 10.0,
-      ),
-      itemBuilder: (context, index) {
-        final seat = _seats[index];
-        return GestureDetector(
-          onTap: () {
-            if (!seat.isFree) {
-              return;
-            }
-            setState(() {
-              if (_selectedSeatNumbers.contains(seat.number)) {
-                _selectedSeatNumbers.remove(seat.number);
-              } else {
-                _selectedSeatNumbers.add(seat.number);
-              }
-            });
-          },
-          child: Container(
-            decoration: BoxDecoration(
-              color: !seat.isFree && _selectedSeatNumbers.contains(seat.number)
-                  ? Colors.red
-                  : seat.isFree && _selectedSeatNumbers.contains(seat.number)
-                  ? Colors.blue
-                  : !seat.isFree
-                  ? Colors.grey
-                  : Colors.white,
-              borderRadius: BorderRadius.circular(5.0),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Number of Guests',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            child: Center(
-              child: Text(
-                '${seat.number}',
-                style: TextStyle(
-                  color: !seat.isFree && _selectedSeatNumbers.contains(seat.number)
-                      ? Colors.white
-                      : Colors.black,
-                  fontSize: 18.0,
-                  fontWeight: FontWeight.bold,
-                ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: guestsController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                hintText: 'Enter number of guests',
               ),
             ),
-          ),
-        );
-      },
-      itemCount: _seats.length,
-      padding: EdgeInsets.all(10.0),
-    ),
-    ),
-    ),
-    Padding(
-    padding: const EdgeInsets.all(16.0),
-    child: Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-    Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-    Text(
-    'Date',
-    style: TextStyle(
-    fontWeight: FontWeight.bold,
-    fontSize: 16.0,
-    ),
-    ),
-    SizedBox(height: 8.0),
-    ElevatedButton(
-    onPressed: () async {
-    final selectedDate = await showDatePicker(
-    context: context,
-    initialDate: DateTime.now(),
-    firstDate: DateTime.now(),
-    lastDate: DateTime(2100),
-    );
-    if (selectedDate != null) {
-    setState(() {
-    _selectedDateTime = DateTime(
-    selectedDate.year,
-    selectedDate.month,
-    selectedDate.day,
-    _selectedDateTime?.hour ?? 0,
-    _selectedDateTime?.minute ?? 0,
-    );
-    });
-    }
-    },
-    child: Text(
-    _selectedDateTime == null
-    ? 'Select date'
-        : '${_selectedDateTime.year}-${_selectedDateTime.month}-${_selectedDateTime.day}',
-    ),
-    ),
-    ],
-    ),
-    Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-    Text(
-    'Time',
-    style: TextStyle(
-    fontWeight: FontWeight.w100,
-      fontSize: 16.0,
-    ),
-    ),
-      SizedBox(height: 8.0),
-      ElevatedButton(
-        onPressed: () async {
-          final selectedTime = await showTimePicker(
-            context: context,
-            initialTime: TimeOfDay.now(),
-          );
-          if (selectedTime != null) {
-            setState(() {
-              _selectedDateTime = DateTime(
-                _selectedDateTime?.year ?? DateTime.now().year,
-                _selectedDateTime?.month ?? DateTime.now().month,
-                _selectedDateTime?.day ?? DateTime.now().day,
-                selectedTime.hour,
-                selectedTime.minute,
-              );
-            });
-          }
-        },
-        child: Text(
-          _selectedDateTime == null
-              ? 'Select time'
-              : '${_selectedDateTime.hour}:${_selectedDateTime.minute}',
+            const SizedBox(height: 16),
+            const Text(
+              'Booking Time',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: selectStartTime,
+                    child: AbsorbPointer(
+                      child: TextFormField(
+                        controller: TextEditingController(
+                          text: selectedStartTime != null
+                              ? selectedStartTime!.toString()
+                              : '',
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: 'Select start time',
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: selectEndTime,
+                    child: AbsorbPointer(
+                      child: TextFormField(
+                        controller: TextEditingController(
+                          text: selectedEndTime != null
+                              ? selectedEndTime!.toString()
+                              : '',
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: 'Select end time',
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16),
+            const Text(
+              'Preorder',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+            ListView.builder(
+              shrinkWrap: true,
+              itemCount: widget.cartItems.length,
+              itemBuilder: (context, index) {
+                final item = widget.cartItems[index];
+                return ListTile(
+                  title: Text(item.name),
+                );
+              },
+            ),
+            SizedBox(height: 16),
+            Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  bookTable();
+                },
+                child: Text('Book Table'),
+              ),
+            ),
+          ],
         ),
       ),
-    ],
-    ),
-    ],
-    ),
-    ),
-          SizedBox(height: 16.0, width: 20.0,),
-          ElevatedButton(
-            onPressed: _selectedSeatNumbers.isNotEmpty && _selectedDateTime != null
-                ? () {
-              // Handle booking logic here
-            }
-                : null,
-            child: Text('Book Seats'),
-          ),
-          SizedBox(height: 16.0),
-        ],
+    );
+  }
+}
+
+class WebViewScreen extends StatefulWidget {
+  final String url;
+
+  WebViewScreen({Key? key, required this.url}) : super(key: key);
+
+  @override
+  _WebViewScreenState createState() => _WebViewScreenState();
+}
+
+class _WebViewScreenState extends State<WebViewScreen> {
+  late WebViewController _controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Stripe Payment'),
       ),
+      body: WebView(
+        initialUrl: widget.url,
+        javascriptMode: JavascriptMode.unrestricted, // This line enables JavaScript
+        onWebViewCreated: (WebViewController webViewController) {
+          _controller = webViewController;
+        },
+      )
     );
   }
 }
